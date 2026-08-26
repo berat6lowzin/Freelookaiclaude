@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "freelook",
+  "version": "${version}",
+  "name": "Freelook",
+  "description": "Look around independently of your character with a toggle key. Turning it off snaps your character to face where you last looked.",
+  "authors": [
+    "you"
+  ],
+  "contact": {},
+  "license": "CC0-1.0",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "com.example.freelook.FreelookMod"
+    ],
+    "client": [
+      "com.example.freelook.FreelookClient"
+    ]
+  },
+  "mixins": [
+    "freelook.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
