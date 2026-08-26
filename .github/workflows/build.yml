@@ -1,0 +1,50 @@
+name: Build Freelook Mod
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Resolve current Yarn mappings and Fabric API version
+        run: |
+          set -e
+          MC_VERSION=$(grep '^minecraft_version=' gradle.properties | cut -d'=' -f2)
+
+          YARN_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/yarn/${MC_VERSION}" | python3 -c "import sys, json; print(json.load(sys.stdin)[0]['version'])")
+
+          FABRIC_API_VERSION=$(curl -s "https://api.modrinth.com/v2/project/fabric-api/version?game_versions=[\"${MC_VERSION}\"]&loaders=[\"fabric\"]" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+releases = [v for v in data if v.get('version_type') == 'release'] or data
+print(releases[0]['version_number'])
+")
+
+          echo "yarn_mappings=${YARN_VERSION}" >> gradle.properties
+          echo "fabric_version=${FABRIC_API_VERSION}" >> gradle.properties
+
+          echo "Resolved:"
+          cat gradle.properties
+
+      - name: Build with Gradle (via Fabric Loom)
+        uses: gradle/actions/setup-gradle@v4
+
+      - run: gradle build --no-daemon --stacktrace
+
+      - name: Upload built jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: freelook-mod-jar
+          path: build/libs/*.jar
